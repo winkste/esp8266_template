@@ -1,34 +1,51 @@
 /*****************************************************************************************
-* FILENAME :        basicSwitch.c             DESIGN REF: 00000FW
+* FILENAME :        basicSwitch.c          
 *
 * DESCRIPTION :
-*       File to support SONOFF basic 
+*       File to support simple wemos relay shield
 *
 * PUBLIC FUNCTIONS :
-*       boolean processPublishRequests(void)
+* boolean relay_ProcessPublishRequests(void)
+* void basicSwitch_CallbackMqtt(char* p_topic, String p_payload) 
+* void basicSwitch_InitializePins(void)
+* void basicSwitch_ToggleSimpleLight(void)
+* void basicSwitch_Reconnect() 
+*
 *
 * NOTES :
-*       This module supports the WIFI configuration and FW Update
-*       based on the library:
-*       https://github.com/tzapu/WiFiManager
-*       ssid of config page: OPEN_ESP_CONFIG_AP2
-*       ip address: 192.168.4.1
-*       Also toggleing the button at start will startup the WIFI
-*       configuration.
 *       
-*       The basicSwitch implements the MQTT sonoff basic switch
-*       functionality to turn on/off the relay in the switch. Additional
-*       the LED will be switched to indicate the status of the 
-*       relay.
+*       The relay implements simple MQTT relay switch with the following
+*       command set:
+*         MQTT_SUB_TOGGLE           "/simple_switch/toggle" // command message for toggle command
+*         MQTT_SUB_BUTTON           "/simple_switch/switch" // command message for button commands
+*         MQTT_PUB_LIGHT_STATE      "/simple_switch/status" //state of relais
 *       
-*
-*       Copyright A.N.Other Co. 2017.  All rights reserved.
+* 
+* Copyright (c) [2017] [Stephan Wink]
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
 * 
 * AUTHOR :    Stephan Wink        START DATE :    01.10.2017
 *
 *
 * REF NO  VERSION DATE    WHO     DETAIL
-* 000       16.10         SWI     First working version      
+* 000       16.10         SWI     template
 *
 *****************************************************************************************/
 
