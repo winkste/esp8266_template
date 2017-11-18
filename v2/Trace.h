@@ -14,7 +14,7 @@
 class Trace
 {
     public:
-        int PURE_MSG  = 0;
+        const int PURE_MSG  = 0;
         const int INFO_MSG  = 1;
         const int WARN_MSG  = 2;
         const int ERROR_MSG = 3;
@@ -34,6 +34,10 @@ class Trace
 
         void print(int type_u16, char * msg_pc);
         void println(int type_u16, char * msg_pc);
+        void print(int type_u16, String msg_str);
+        void println(int type_u16, String msg_str);
+        void print(int type_u16, uint8_t value_u8);
+        void println(int type_u16, uint8_t value_u8);
 
         /*void print(int type_u16, unsigned long data_u32);
         void println(int type_16, unsigned long data_u32);
