@@ -119,11 +119,11 @@ boolean processPublishRequests(void)
 
   if(true == publishInfo_bolst)
   {
-    trace_st.println(trace_st.PURE_MSG, "");
-    trace_st.print(trace_st.INFO_MSG, "[mqtt] publish requested info: ");
-    trace_st.print(trace_st.PURE_MSG, FW_IDENTIFIER);
-    trace_st.println(trace_st.PURE_MSG, FW_VERSION);
-    trace_st.println(trace_st.INFO_MSG, FW_DESCRIPTION);
+    trace_st.println(trace_PURE_MSG, "");
+    trace_st.print(trace_INFO_MSG, "[mqtt] publish requested info: ");
+    trace_st.print(trace_PURE_MSG, FW_IDENTIFIER);
+    trace_st.println(trace_PURE_MSG, FW_VERSION);
+    trace_st.println(trace_INFO_MSG, FW_DESCRIPTION);
     ret_bol = client_sts.publish(build_topic(MQTT_PUB_FW_IDENT), FW_IDENTIFIER, true);
     ret_bol &= client_sts.publish(build_topic(MQTT_PUB_FW_VERSION), FW_VERSION, true);
     ret_bol &= client_sts.publish(build_topic(MQTT_PUB_FW_DESC), FW_DESCRIPTION, true);
@@ -160,10 +160,10 @@ void callback(char* p_topic, byte* p_payload, unsigned int p_length)
     payload.concat((char)p_payload[i]);
   }
   // print received topic and payload
-  trace_st.print(trace_st.INFO_MSG, "[mqtt] message received: ");
-  trace_st.print(trace_st.PURE_MSG, p_topic);
-  trace_st.print(trace_st.PURE_MSG, "   ");
-  trace_st.println(trace_st.PURE_MSG, payload);
+  trace_st.print(trace_INFO_MSG, "[mqtt] message received: ");
+  trace_st.print(trace_PURE_MSG, p_topic);
+  trace_st.print(trace_PURE_MSG, "   ");
+  trace_st.println(trace_PURE_MSG, payload);
 
   // execute generic support command
   if(String(build_topic(MQTT_SUB_COMMAND)).equals(p_topic)) 
@@ -180,8 +180,8 @@ void callback(char* p_topic, byte* p_payload, unsigned int p_length)
     } 
     else
     {
-      trace_st.print(trace_st.ERROR_MSG, "[mqtt] unexpected command: "); 
-      trace_st.println(trace_st.PURE_MSG, payload);
+      trace_st.print(trace_ERROR_MSG, "[mqtt] unexpected command: "); 
+      trace_st.println(trace_PURE_MSG, payload);
     }
   }
   else
@@ -227,11 +227,13 @@ void updateBUTTONstate()
       if(millis() - timerButtonDown_u32st < BUTTON_TIMEOUT)
       {
         counterButton_u8st++;
-      } else {
-        counterButton_u8st=1;
+      } 
+      else 
+      {    
+        counterButton_u8st = 1;
       }
-      trace_st.print(trace_st.INFO_MSG, "[BUTTON] push nr ");
-      trace_st.println(trace_st.PURE_MSG, counterButton_u8st);
+      trace_st.print(trace_INFO_MSG, "[BUTTON] push nr ");
+      trace_st.println(trace_PURE_MSG, counterButton_u8st);
 
     };
     //Serial.print(".");
@@ -253,42 +255,42 @@ void reconnect()
   uint8_t tries=0;
   while (!client_sts.connected()) 
   {
-    trace_st.println(trace_st.INFO_MSG, "<<mqtt>> Attempting connection...");
+    trace_st.println(trace_INFO_MSG, "<<mqtt>> Attempting connection...");
     // Attempt to connect
-    trace_st.print(trace_st.INFO_MSG, "<<mqtt>> client id: ");
-    trace_st.println(trace_st.PURE_MSG, mqttData_sts.dev_short);
+    trace_st.print(trace_INFO_MSG, "<<mqtt>> client id: ");
+    trace_st.println(trace_PURE_MSG, mqttData_sts.dev_short);
     if(client_sts.connect(mqttData_sts.dev_short, mqttData_sts.login, mqttData_sts.pw)) 
     {
-      trace_st.println(trace_st.INFO_MSG, "<<mqtt>> connected");
+      trace_st.println(trace_INFO_MSG, "<<mqtt>> connected");
       client_sts.loop();
-      trace_st.println(trace_st.INFO_MSG,"<<mqtt>> subscribed generic: ");
-      trace_st.println(trace_st.INFO_MSG, MQTT_SUB_COMMAND);
+      trace_st.println(trace_INFO_MSG,"<<mqtt>> subscribed generic: ");
+      trace_st.println(trace_INFO_MSG, MQTT_SUB_COMMAND);
       client_sts.subscribe(build_topic(MQTT_SUB_COMMAND));  // request general command with payload
       client_sts.loop();
       // ... and resubscribe
       basicSwitch_Reconnect();
       
-      trace_st.println(trace_st.INFO_MSG, "<<mqtt>> subscribing finished");
-      trace_st.print(trace_st.INFO_MSG, "<<mqtt>> publish firmware info: ");
-      trace_st.print(trace_st.PURE_MSG, FW_IDENTIFIER);
-      trace_st.println(trace_st.PURE_MSG, FW_VERSION);
-      trace_st.println(trace_st.INFO_MSG, FW_DESCRIPTION);
+      trace_st.println(trace_INFO_MSG, "<<mqtt>> subscribing finished");
+      trace_st.print(trace_INFO_MSG, "<<mqtt>> publish firmware info: ");
+      trace_st.print(trace_PURE_MSG, FW_IDENTIFIER);
+      trace_st.println(trace_PURE_MSG, FW_VERSION);
+      trace_st.println(trace_INFO_MSG, FW_DESCRIPTION);
       client_sts.publish(build_topic(MQTT_PUB_FW_IDENT), FW_IDENTIFIER, true);
       client_sts.publish(build_topic(MQTT_PUB_FW_VERSION), FW_VERSION, true);
       client_sts.publish(build_topic(MQTT_PUB_FW_DESC), FW_DESCRIPTION, true);
-      trace_st.println(trace_st.INFO_MSG, "<<mqtt>> publishing finished");
+      trace_st.println(trace_INFO_MSG, "<<mqtt>> publishing finished");
     } 
     else 
     {
-      trace_st.print(trace_st.ERROR_MSG, "failed, rc="); 
-      trace_st.print(trace_st.PURE_MSG, String(client_sts.state())); 
-      trace_st.println(trace_st.PURE_MSG, ", try again in 5 seconds");
+      trace_st.print(trace_ERROR_MSG, "failed, rc="); 
+      trace_st.print(trace_PURE_MSG, String(client_sts.state())); 
+      trace_st.println(trace_PURE_MSG, ", try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
     }
     tries++;
     if(tries>=5){
-      trace_st.println(trace_st.ERROR_MSG, "Can't connect, starting AP");
+      trace_st.println(trace_ERROR_MSG, "Can't connect, starting AP");
       wifiManager_sts.startConfigPortal(CONFIG_SSID); // needs to be tested!
     }
   }
@@ -311,7 +313,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
   wifiManager_sts.addParameter(&wifiManagerParamMqttServerPw_sts);
   // prepare wifimanager variables
   wifiManager_sts.setAPStaticIPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,255), IPAddress(255,255,255,0));
-  trace_st.println(trace_st.INFO_MSG, "entered config mode");
+  trace_st.println(trace_INFO_MSG, "entered config mode");
 }
 
 /**---------------------------------------------------------------------------------------
@@ -328,20 +330,20 @@ void saveConfigCallback()
   sprintf(mqttData_sts.cap, "%s", wifiManagerParamMqttCapability_sts.getValue());
   sprintf(mqttData_sts.server_port, "%s", wifiManagerParamMqttServerPort_sts.getValue());
   sprintf(mqttData_sts.dev_short, "%s", wifiManagerParamMqttClientShort_sts.getValue());
-  trace_st.println(trace_st.INFO_MSG, "=== Saving parameters: ===");
-  trace_st.print(trace_st.INFO_MSG, "mqtt ip: ");        
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.server_ip);
-  trace_st.print(trace_st.INFO_MSG, "mqtt port: ");      
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.server_port);
-  trace_st.print(trace_st.INFO_MSG, "mqtt user: ");      
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.login);
-  trace_st.print(trace_st.INFO_MSG, "mqtt pw: ");        
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.pw);
-  trace_st.print(trace_st.INFO_MSG, "mqtt dev short: "); 
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.dev_short);
-  trace_st.print(trace_st.INFO_MSG, "capabilities: ");   
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.cap);
-  trace_st.println(trace_st.INFO_MSG, "=== End of parameters ==="); 
+  trace_st.println(trace_INFO_MSG, "=== Saving parameters: ===");
+  trace_st.print(trace_INFO_MSG, "mqtt ip: ");        
+  trace_st.println(trace_PURE_MSG, mqttData_sts.server_ip);
+  trace_st.print(trace_INFO_MSG, "mqtt port: ");      
+  trace_st.println(trace_PURE_MSG, mqttData_sts.server_port);
+  trace_st.print(trace_INFO_MSG, "mqtt user: ");      
+  trace_st.println(trace_PURE_MSG, mqttData_sts.login);
+  trace_st.print(trace_INFO_MSG, "mqtt pw: ");        
+  trace_st.println(trace_PURE_MSG, mqttData_sts.pw);
+  trace_st.print(trace_INFO_MSG, "mqtt dev short: "); 
+  trace_st.println(trace_PURE_MSG, mqttData_sts.dev_short);
+  trace_st.print(trace_INFO_MSG, "capabilities: ");   
+  trace_st.println(trace_PURE_MSG, mqttData_sts.cap);
+  trace_st.println(trace_INFO_MSG, "=== End of parameters ==="); 
   char* temp=(char*) &mqttData_sts;
   for(int i=0; i<sizeof(mqttData_sts); i++){
     EEPROM.write(i,*temp);
@@ -349,7 +351,7 @@ void saveConfigCallback()
     temp++;
   }
   EEPROM.commit();
-  trace_st.println(trace_st.INFO_MSG, "configuration saved, restarting");
+  trace_st.println(trace_INFO_MSG, "configuration saved, restarting");
   delay(2000);  
   ESP.reset(); // we can't change from AP mode to client mode, thus: reboot
 }
@@ -372,24 +374,24 @@ void loadConfig()
     //Serial.print(*temp);
     temp++;
   }
-  trace_st.println(trace_st.INFO_MSG, "=== Loaded parameters: ===");
-  trace_st.print(trace_st.INFO_MSG, "mqtt ip: ");        
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.server_ip);
-  trace_st.print(trace_st.INFO_MSG, "mqtt port: ");      
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.server_port);
-  trace_st.print(trace_st.INFO_MSG, "mqtt user: ");      
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.login);
-  trace_st.print(trace_st.INFO_MSG, "mqtt pw: ");        
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.pw);
-  trace_st.print(trace_st.INFO_MSG, "mqtt dev short: "); 
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.dev_short);
-  trace_st.print(trace_st.INFO_MSG, "capabilities: ");   
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.cap);
+  trace_st.println(trace_INFO_MSG, "=== Loaded parameters: ===");
+  trace_st.print(trace_INFO_MSG, "mqtt ip: ");        
+  trace_st.println(trace_PURE_MSG, mqttData_sts.server_ip);
+  trace_st.print(trace_INFO_MSG, "mqtt port: ");      
+  trace_st.println(trace_PURE_MSG, mqttData_sts.server_port);
+  trace_st.print(trace_INFO_MSG, "mqtt user: ");      
+  trace_st.println(trace_PURE_MSG, mqttData_sts.login);
+  trace_st.print(trace_INFO_MSG, "mqtt pw: ");        
+  trace_st.println(trace_PURE_MSG, mqttData_sts.pw);
+  trace_st.print(trace_INFO_MSG, "mqtt dev short: "); 
+  trace_st.println(trace_PURE_MSG, mqttData_sts.dev_short);
+  trace_st.print(trace_INFO_MSG, "capabilities: ");   
+  trace_st.println(trace_PURE_MSG, mqttData_sts.cap);
 
   // capabilities
   // capabilities
   
-  trace_st.print(trace_st.INFO_MSG, "=== End of parameters ===");
+  trace_st.print(trace_INFO_MSG, "=== End of parameters ===");
 }
 
 /**---------------------------------------------------------------------------------------
@@ -420,15 +422,15 @@ void setupCallback()
   // first task: initialize Trace
   trace_st.Initialize();
 
-  trace_st.println(trace_st.PURE_MSG,""); 
-  trace_st.println(trace_st.INFO_MSG, "... starting");
-  trace_st.print(trace_st.INFO_MSG, "Firmware Information:");  
-  trace_st.print(trace_st.PURE_MSG, FW_IDENTIFIER); 
-  trace_st.println(trace_st.PURE_MSG, FW_VERSION);
-  trace_st.print(trace_st.INFO_MSG, "Firmware Description:");  
-  trace_st.println(trace_st.PURE_MSG, FW_DESCRIPTION);
-  trace_st.print(trace_st.INFO_MSG, "Device: ");               
-  trace_st.println(trace_st.PURE_MSG, mqttData_sts.dev_short);
+  trace_st.println(trace_PURE_MSG,""); 
+  trace_st.println(trace_INFO_MSG, "... starting");
+  trace_st.print(trace_INFO_MSG, "Firmware Information:");  
+  trace_st.print(trace_PURE_MSG, FW_IDENTIFIER); 
+  trace_st.println(trace_PURE_MSG, FW_VERSION);
+  trace_st.print(trace_INFO_MSG, "Firmware Description:");  
+  trace_st.println(trace_PURE_MSG, FW_DESCRIPTION);
+  trace_st.print(trace_INFO_MSG, "Device: ");               
+  trace_st.println(trace_PURE_MSG, mqttData_sts.dev_short);
   EEPROM.begin(512); // can be up to 4096
  
   // start wifi manager
@@ -437,10 +439,10 @@ void setupCallback()
   wifiManager_sts.setConfigPortalTimeout(MAX_AP_TIME);
   WiFi.mode(WIFI_STA); // avoid station and ap at the same time
 
-  trace_st.println(trace_st.INFO_MSG, "<<wifi>> connecting... ");
+  trace_st.println(trace_INFO_MSG, "<<wifi>> connecting... ");
   if(!wifiManager_sts.autoConnect(CONFIG_SSID)){
     // possible situataion: Main power out, ESP went to config mode as the routers wifi wasn available on time .. 
-    trace_st.println(trace_st.ERROR_MSG, "<<wifi>> failed to connect and hit timeout, restarting ...");
+    trace_st.println(trace_ERROR_MSG, "<<wifi>> failed to connect and hit timeout, restarting ...");
     delay(1000); // time for serial to print
     ESP.reset(); // reset loop if not only or configured after 5min .. 
   }
@@ -450,9 +452,9 @@ void setupCallback()
 
   InitializePins();
   
-  trace_st.println(trace_st.INFO_MSG, "<<wifi>> connected");
-  trace_st.print(trace_st.INFO_MSG, "<<wifi>>  IP address: "); 
-  trace_st.println(trace_st.PURE_MSG, WiFi.localIP().toString());
+  trace_st.println(trace_INFO_MSG, "<<wifi>> connected");
+  trace_st.print(trace_INFO_MSG, "<<wifi>>  IP address: "); 
+  trace_st.println(trace_PURE_MSG, WiFi.localIP().toString());
 
   // init the MQTT connection
   client_sts.setServer(mqttData_sts.server_ip, atoi(mqttData_sts.server_port));
@@ -487,7 +489,7 @@ void loopCallback()
 	if((counterButton_u8st >= 10 && millis() - timerButtonDown_u32st > BUTTON_TIMEOUT) || (true == startWifiConfig_bolst))
 	{
     startWifiConfig_bolst = false;
-		trace_st.println(trace_st.INFO_MSG, "<<SYS>> Rebooting to setup mode");
+		trace_st.println(trace_INFO_MSG, "<<SYS>> Rebooting to setup mode");
 		delay(200);
 		wifiManager_sts.startConfigPortal(CONFIG_SSID); // needs to be tested!
 		//ESP.reset(); // reboot and switch to setup mode right after that
