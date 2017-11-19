@@ -1,8 +1,8 @@
 /*****************************************************************************************
-* FILENAME :        gensettings.h          
+* FILENAME :        Trace.h          
 *
 * DESCRIPTION :
-*       Header file to define general/template settings
+*       Class header for trace functionality
 *
 * PUBLIC FUNCTIONS :
 *       N/A
@@ -29,54 +29,64 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
 *****************************************************************************************/
-#ifndef GENSETTINGS_H
-#define GENSETTINGS_H
+
+#ifndef TRACE_H_
+#define TRACE_H_
 
 /****************************************************************************************/
 /* Imported header files: */
+#include <ESP8266WiFi.h>
 
 /****************************************************************************************/
 /* Global constant defines: */
-#define CONFIG_SSID               "OPEN_ESP_CONFIG_AP2" // SSID of the configuration mode
-#define MAX_AP_TIME               300 // restart eps after 300 sec in config mode
-#define CONNECT_RETRIES           5 
-
-//#define MSG_BUFFER_SIZE         60  // mqtt messages max char size
-#define MQTT_DEFAULT_DEVICE       "devXX" // default room device 
-
-#define MQTT_PUB_FW_IDENT         "/generic/fwident" //firmware identification
-#define MQTT_PUB_FW_VERSION       "/generic/fwversion" //firmware version
-#define MQTT_PUB_FW_DESC          "/generic/desc" //firmware description
-#define MQTT_SUB_COMMAND          "/generic/cmd" // command message for generic commands
-#define MQTT_CLIENT               MQTT_DEFAULT_DEVICE // just a name used to talk to MQTT broker
-#define MQTT_PAYLOAD_CMD_INFO     "INFO"
-#define MQTT_PAYLOAD_CMD_SETUP    "SETUP"
-#define PUBLISH_TIME_OFFSET       200     // ms timeout between two publishes
-
-#define BUTTON_INPUT_PIN          0  // D3
-#define BUTTON_TIMEOUT            1500  // max 1500ms timeout between each button press to count up (start of config)
-#define BUTTON_DEBOUNCE           400  // ms debouncing for the botton
+#define trace_PURE_MSG  0u
+#define trace_INFO_MSG  1u
+#define trace_WARN_MSG  2u
+#define trace_ERROR_MSG 3u
 
 /****************************************************************************************/
 /* Global function like macro defines (to be avoided): */
 
 /****************************************************************************************/
 /* Global type definitions (enum, struct, union): */
-// Buffer to hold data from the WiFi manager for mqtt login
-typedef struct mqttData_tag{ //80 byte
-  char login[16];
-  char pw[16];
-  char dev_short[6];
-  char cap[2]; // capability
-  char server_ip[16];
-  char server_port[6];
-}mqttData_t;
 
 /****************************************************************************************/
-/* Global data allusions (allows type checking, definition in c file): */
+/* Class definition: */
+class Trace
+{
+    public:
+        /********************************************************************************/
+        /* Public data definitions */
+        const uint8_t PURE_MSG  = 0;
+        const uint8_t INFO_MSG  = 1;
+        const uint8_t WARN_MSG  = 2;
+        const uint8_t ERROR_MSG = 3;
 
-/****************************************************************************************/
-/* Global function prototypes: */
+        /********************************************************************************/
+        /* Public function definitions: */
+        Trace();
+        Trace(bool isActive_bol);
+        Trace(bool isActive_bol, uint8_t channel_u8);
+        void PushToChannel();
+        void Initialize();
+        virtual ~Trace();
+        void print(uint8_t type_u8, char * msg_pc);
+        void println(uint8_t type_u8, char * msg_pc);
+        void print(uint8_t type_u8, String msg_str);
+        void println(uint8_t type_u8, String msg_str);
+        void print(uint8_t type_u8, uint8_t value_u8);
+        void println(uint8_t type_u8, uint8_t value_u8);
 
-#endif /* GENSETTINGS_H */
-/****************************************************************************************/
+    private:
+        /********************************************************************************/
+        /* Private data definitions */
+        bool isActive_bol;
+        uint8_t channel_u8;
+        String buffer_str;
+        
+        /********************************************************************************/
+        /* Private function definitions: */
+        void prepareMsg(uint8_t type_u8, String msg_str);
+};
+
+#endif /* TRACE_H_ */

@@ -52,6 +52,8 @@
 #include <EEPROM.h>
 #include "gensettings.h"
 #include "Trace.h"
+#include "DeviceFactory.h"
+#include "MqttDevice.h"
 
 #include "prjsettings.h"
 
@@ -82,6 +84,9 @@ static char buffer_stca[60];
 static WiFiClient            wifiClient_sts;
 static PubSubClient          client_sts(wifiClient_sts);
 static mqttData_t            mqttData_sts;
+static Trace                 trace_st(true, 0);
+static DeviceFactory         factory_st(&trace_st);
+static MqttDevice            *device_pst = NULL;
 
 static WiFiManager           wifiManager_sts;
 // prepare wifimanager variables
@@ -99,7 +104,7 @@ static uint32_t             timerLastPub_u32st = 0;
 static boolean              publishInfo_bolst = false;
 static boolean              startWifiConfig_bolst = false;
 
-static Trace                trace_st(true, 0);
+
 
 /*****************************************************************************************
 * Global functions (unlimited visibility): 
@@ -134,7 +139,8 @@ boolean processPublishRequests(void)
   }
   else
   {
-    ret_bol = basicSwitch_ProcessPublishRequests();
+    //ret_bol = basicSwitch_ProcessPublishRequests();
+    device_pst->ProcessPublishRequests(&client_sts);
   }
  
   return(ret_bol);  
@@ -186,7 +192,8 @@ void callback(char* p_topic, byte* p_payload, unsigned int p_length)
   }
   else
   {
-    basicSwitch_CallbackMqtt(p_topic, payload); 
+    //basicSwitch_CallbackMqtt(p_topic, payload);
+    device_pst->CallbackMqtt(&client_sts, p_topic, payload);
   }  
 }
 
@@ -202,7 +209,8 @@ void InitializePins(void)
   pinMode(BUTTON_INPUT_PIN, INPUT);
   digitalWrite(BUTTON_INPUT_PIN, HIGH); // pull up to avoid interrupts without sensor
   attachInterrupt(digitalPinToInterrupt(BUTTON_INPUT_PIN), updateBUTTONstate, CHANGE);
-  basicSwitch_InitializePins();
+  //basicSwitch_InitializePins();
+  device_pst->Initialize();
 }
 
 /**---------------------------------------------------------------------------------------
@@ -222,7 +230,7 @@ void updateBUTTONstate()
     { // avoid bouncing
       // button down
       // toggle status of both lights
-      basicSwitch_ToggleSimpleLight();
+      ////////TODO/////////////////////////////////////////////////////////////////basicSwitch_ToggleSimpleLight();
 
       if(millis() - timerButtonDown_u32st < BUTTON_TIMEOUT)
       {
@@ -268,7 +276,8 @@ void reconnect()
       client_sts.subscribe(build_topic(MQTT_SUB_COMMAND));  // request general command with payload
       client_sts.loop();
       // ... and resubscribe
-      basicSwitch_Reconnect();
+      //basicSwitch_Reconnect();
+      device_pst->Reconnect(&client_sts, mqttData_sts.dev_short);
       
       trace_st.println(trace_INFO_MSG, "<<mqtt>> subscribing finished");
       trace_st.print(trace_INFO_MSG, "<<mqtt>> publish firmware info: ");
@@ -390,6 +399,7 @@ void loadConfig()
   trace_st.println(trace_PURE_MSG, mqttData_sts.cap);
 
   // capabilities
+  device_pst = factory_st.GenerateDevice(0);
   // capabilities
   
   trace_st.print(trace_INFO_MSG, "=== End of parameters ===");
