@@ -75,7 +75,7 @@ class SonoffSwitch : public MqttDevice
         ~SonoffSwitch();
     private:
         /********************************************************************************/
-        /* Private data definitions */
+        /* Private data definitions */ 
         boolean simpleLightState_bol  = false;
         boolean publishState_bol      = true;
         char buffer_ca[100];

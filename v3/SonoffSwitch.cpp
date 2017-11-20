@@ -62,12 +62,15 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * @param     p_trace     trace object for info and error messages
  * @return    n/a
 *//*-----------------------------------------------------------------------------------*/
-SonoffSwitch::SonoffSwitch(Trace *p_trace, uint8_t simpleLightPin_u8, uint8_t ledPin_u8) : MqttDevice(p_trace)
+SonoffSwitch::SonoffSwitch(Trace *p_trace, uint8_t simpleLightPin_u8, 
+                              uint8_t ledPin_u8) : MqttDevice(p_trace)
 {
     this->prevTime_u32 = 0;
     this->publications_u16 = 0;
     this->simpleLightPin_u8 = simpleLightPin_u8;
     this->ledPin_u8 = this->ledPin_u8;
+    this->simpleLightState_bol  = false;
+    this->publishState_bol      = true;
 }
 
 /**---------------------------------------------------------------------------------------
@@ -91,7 +94,7 @@ void SonoffSwitch::Initialize()
 {
     p_trace->println(trace_INFO_MSG, "Sonoff switch initialized");
     pinMode(this->simpleLightPin_u8, OUTPUT);
-    setSimpleLight();
+    this->setSimpleLight();
     pinMode(this->ledPin_u8, OUTPUT);
     this->isInitialized_bol = true;
 }
@@ -101,25 +104,36 @@ void SonoffSwitch::Initialize()
  * @author    winkste
  * @date      20 Okt. 2017
  * @param     client     mqtt client object
+ * @param     dev_p      client device id for building the mqtt topics
  * @return    n/a
 *//*-----------------------------------------------------------------------------------*/
 void SonoffSwitch::Reconnect(PubSubClient *client_p, const char *dev_p)
 {
-    p_trace->println(trace_INFO_MSG, "Sonoff switch reconnected");
-    this->isConnected_bol = true;
-
-    this->dev_p = dev_p;
-
-    // ... and resubscribe
-    client_p->subscribe(build_topic(MQTT_SUB_TOGGLE));  // toggle sonoff button
-    client_p->loop();
-    p_trace->print(trace_INFO_MSG, "[mqtt] subscribed 1: ");
-    p_trace->println(trace_PURE_MSG, MQTT_SUB_TOGGLE);
-    client_p->subscribe(build_topic(MQTT_SUB_BUTTON));  // change button state with payload
-    client_p->loop();
-    p_trace->print(trace_INFO_MSG, "[mqtt] subscribed 2: ");
-    p_trace->println(trace_PURE_MSG, MQTT_SUB_BUTTON);
-    client_p->loop();
+    if(NULL != client_p)
+    {
+        this->dev_p = dev_p;
+        this->isConnected_bol = true;
+        p_trace->println(trace_INFO_MSG, "Sonoff switch reconnected");
+        // ... and resubscribe
+        // toggle sonoff light
+        client_p->subscribe(build_topic(MQTT_SUB_TOGGLE));  
+        client_p->loop();
+        p_trace->print(trace_INFO_MSG, "[mqtt] subscribed 1: ");
+        p_trace->println(trace_PURE_MSG, MQTT_SUB_TOGGLE);
+        // change light state with payload
+        client_p->subscribe(build_topic(MQTT_SUB_BUTTON));  
+        client_p->loop();
+        p_trace->print(trace_INFO_MSG, "[mqtt] subscribed 2: ");
+        p_trace->println(trace_PURE_MSG, MQTT_SUB_BUTTON);
+        client_p->loop();
+    }
+    else
+    {
+        // failure, not connected
+        p_trace->println(trace_ERROR_MSG, 
+                                "uninizialized MQTT client in sonoff switch detected");
+        this->isConnected_bol = false;
+    }
 }
 
 /**---------------------------------------------------------------------------------------
@@ -133,34 +147,44 @@ void SonoffSwitch::Reconnect(PubSubClient *client_p, const char *dev_p)
 *//*-----------------------------------------------------------------------------------*/
 void SonoffSwitch::CallbackMqtt(PubSubClient *client, char* p_topic, String p_payload)
 {
-    p_trace->println(trace_INFO_MSG, "Sonoff switch mqtt callback");
-    p_trace->println(trace_INFO_MSG, p_topic);
-    p_trace->println(trace_INFO_MSG, p_payload);
-
-    if (String(build_topic(MQTT_SUB_TOGGLE)).equals(p_topic)) 
+    if(true == this->isConnected_bol)
     {
-        this->ToggleSimpleLight();
+        // received toggle light mqtt topic
+        if (String(build_topic(MQTT_SUB_TOGGLE)).equals(p_topic)) 
+        {
+            p_trace->println(trace_INFO_MSG, "Sonoff switch mqtt callback");
+            p_trace->println(trace_INFO_MSG, p_topic);
+            p_trace->println(trace_INFO_MSG, p_payload);
+            this->ToggleSimpleLight();
+        }
+        // execute command to switch on/off the light
+        else if (String(build_topic(MQTT_SUB_BUTTON)).equals(p_topic)) 
+        {
+            p_trace->println(trace_INFO_MSG, "Sonoff switch mqtt callback");
+            p_trace->println(trace_INFO_MSG, p_topic);
+            p_trace->println(trace_INFO_MSG, p_payload);
+            // test if the payload is equal to "ON" or "OFF"
+            if(0 == p_payload.indexOf(String(MQTT_PAYLOAD_CMD_ON))) 
+            {
+                this->simpleLightState_bol = true;
+                this->setSimpleLight();  
+            }
+            else if(0 == p_payload.indexOf(String(MQTT_PAYLOAD_CMD_OFF)))
+            {
+                this->simpleLightState_bol = false;
+                this->setSimpleLight();
+            }
+            else
+            {
+                p_trace->print(trace_ERROR_MSG, "[mqtt] unexpected payload: "); 
+                p_trace->println(trace_PURE_MSG, p_payload);
+            }   
+        } 
     }
-    // execute command to switch on/off the light
-    else if (String(build_topic(MQTT_SUB_BUTTON)).equals(p_topic)) 
+    else
     {
-        // test if the payload is equal to "ON" or "OFF"
-        if(0 == p_payload.indexOf(String(MQTT_PAYLOAD_CMD_ON))) 
-        {
-            this->simpleLightState_bol = true;
-            this->setSimpleLight();  
-        }
-        else if(0 == p_payload.indexOf(String(MQTT_PAYLOAD_CMD_OFF)))
-        {
-            this->simpleLightState_bol = false;
-            this->setSimpleLight();
-        }
-        else
-        {
-            p_trace->print(trace_ERROR_MSG, "[mqtt] unexpected command: "); 
-            p_trace->println(trace_PURE_MSG, p_payload);
-        }   
-    }  
+        p_trace->println(trace_ERROR_MSG, "connection failure in sonoff CallbackMqtt "); 
+    }
 }
 
 /**---------------------------------------------------------------------------------------
@@ -174,28 +198,37 @@ bool SonoffSwitch::ProcessPublishRequests(PubSubClient *client)
 {
     String tPayload;
     boolean ret = false;
-
-    if(true == publishState_bol)
+    
+    if(true == this->isConnected_bol)
     {
-        p_trace->print(trace_INFO_MSG, "[mqtt] publish requested state: ");
-        p_trace->print(trace_PURE_MSG, MQTT_PUB_LIGHT_STATE);
-        p_trace->print(trace_PURE_MSG, "  :  ");
-        if(true == simpleLightState_bol)
+        // check if state has changed, than publish this state
+        if(true == publishState_bol)
         {
-          ret = client->publish(build_topic(MQTT_PUB_LIGHT_STATE), 
-                                    MQTT_PAYLOAD_CMD_ON, true);
-          p_trace->println(trace_PURE_MSG, MQTT_PAYLOAD_CMD_ON);
+            p_trace->print(trace_INFO_MSG, "[mqtt] publish requested state: ");
+            p_trace->print(trace_PURE_MSG, MQTT_PUB_LIGHT_STATE);
+            p_trace->print(trace_PURE_MSG, "  :  ");
+            if(true == simpleLightState_bol)
+            {
+              ret = client->publish(build_topic(MQTT_PUB_LIGHT_STATE), 
+                                        MQTT_PAYLOAD_CMD_ON, true);
+              p_trace->println(trace_PURE_MSG, MQTT_PAYLOAD_CMD_ON);
+            }
+            else
+            {
+                ret = client->publish(build_topic(MQTT_PUB_LIGHT_STATE), 
+                                          MQTT_PAYLOAD_CMD_OFF, true); 
+                p_trace->println(trace_PURE_MSG, MQTT_PAYLOAD_CMD_OFF); 
+            } 
+            if(ret)
+            {
+                publishState_bol = false;     
+            }
         }
-        else
-        {
-            ret = client->publish(build_topic(MQTT_PUB_LIGHT_STATE), 
-                                      MQTT_PAYLOAD_CMD_OFF, true); 
-            p_trace->println(trace_PURE_MSG, MQTT_PAYLOAD_CMD_OFF); 
-        } 
-        if(ret)
-        {
-            publishState_bol = false;     
-        }
+    }
+    else
+    {
+        p_trace->println(trace_ERROR_MSG, 
+                              "connection failure in sonoff ProcessPublishRequests "); 
     }
     return ret; 
 };
@@ -228,12 +261,15 @@ void SonoffSwitch::ToggleSimpleLight(void)
 *//*-----------------------------------------------------------------------------------*/
 void SonoffSwitch::TurnRelaisOff(void)
 {
-  this->simpleLightState_bol = false;
-  digitalWrite(this->simpleLightPin_u8, LOW);
-  digitalWrite(this->ledPin_u8, HIGH);
-  Serial.println("relais state: OFF");
-  Serial.println("request publish");
-  this->publishState_bol = true;
+  if(true == this->isInitialized_bol)
+  {
+      this->simpleLightState_bol = false;
+      digitalWrite(this->simpleLightPin_u8, LOW);
+      digitalWrite(this->ledPin_u8, HIGH);
+      Serial.println("relais state: OFF");
+      Serial.println("request publish");
+      this->publishState_bol = true;
+  }
 }
 
 /**---------------------------------------------------------------------------------------
@@ -244,12 +280,15 @@ void SonoffSwitch::TurnRelaisOff(void)
 *//*-----------------------------------------------------------------------------------*/
 void SonoffSwitch::TurnRelaisOn(void)
 {
-  this->simpleLightState_bol = true;
-  digitalWrite(this->simpleLightPin_u8, HIGH);
-  digitalWrite(this->ledPin_u8, LOW);
-  Serial.println("Button state: ON");
-  Serial.println("request publish");
-  this->publishState_bol = true;
+  if(true == this->isInitialized_bol)
+  {
+      this->simpleLightState_bol = true;
+      digitalWrite(this->simpleLightPin_u8, HIGH);
+      digitalWrite(this->ledPin_u8, LOW);
+      Serial.println("Button state: ON");
+      Serial.println("request publish");
+      this->publishState_bol = true;
+  }
 }
 
 /**---------------------------------------------------------------------------------------

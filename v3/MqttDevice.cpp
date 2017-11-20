@@ -56,6 +56,8 @@ MqttDevice::MqttDevice(Trace *p_trace)
     this->prevTime_u32 = 0;
     this->publications_u16 = 0;
     this->p_trace = p_trace;
+    this->isInitialized_bol = false;
+    this->isConnected_bol = false;
 }
 
 MqttDevice::~MqttDevice()
