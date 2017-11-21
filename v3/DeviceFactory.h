@@ -36,10 +36,11 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 /* Imported header files: */
 
 #include "MqttDevice.h"
-#include "SonoffSwitch.h"
-//#include "DhtSensor.h"
 #include "Trace.h"
 #include "PubSubClient.h"
+//#include "DhtSensor.h"
+
+#include "SingleRelay.h"
 
 /****************************************************************************************/
 /* Global constant defines: */

@@ -1,5 +1,5 @@
 /*****************************************************************************************
-* FILENAME :        prjsettings.h          
+* FILENAME :        version.h          
 *
 * DESCRIPTION :
 *       Header file to define project specific settings
@@ -28,6 +28,13 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
+* 
+* AUTHOR :    Stephan Wink        START DATE :    01.10.2017
+*
+*
+* REF NO  VERSION DATE    WHO     DETAIL
+* 000       16.10         SWI     branched from template
+* 001       21.11         SWI     first version with single relay object
 *****************************************************************************************/
 #ifndef PRJSETTINGS_H
 #define PRJSETTINGS_H

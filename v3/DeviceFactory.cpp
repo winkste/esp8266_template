@@ -36,13 +36,15 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 
 /****************************************************************************************/
 /* Include Interfaces */
-#include "SonoffSwitch.h"
-//#include "DhtSensor.h"
+
+#include "DeviceFactory.h"
+
 #include "MqttDevice.h"
 #include "Trace.h"
 #include "PubSubClient.h"
 
-#include "DeviceFactory.h"
+//#include "DhtSensor.h"
+#include "SingleRelay.h"
 
 /****************************************************************************************/
 /* Local constant defines */
@@ -57,8 +59,6 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 
 // used pins
 //#define BUTTON_INPUT_PIN          0  // D3
-#define SIMPLE_LIGHT_PIN            5
-#define LED_PIN                     SIMPLE_LIGHT_PIN
 
 #define DHTPIN                    5  // D1
 #define DHT_PWR                   4  // D2
@@ -105,7 +105,7 @@ MqttDevice * DeviceFactory::GenerateDevice(uint8_t type_u8)
     switch(type_u8)
     {
         case 0:
-            device_p = new SonoffSwitch(trace_p, SIMPLE_LIGHT_PIN, LED_PIN);
+            device_p = new SingleRelay(trace_p);
             break;
         case 1:
             //device_p = new DhtSensor(trace_p);

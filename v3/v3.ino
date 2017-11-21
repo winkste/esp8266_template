@@ -1,8 +1,8 @@
 /*****************************************************************************************
-* FILENAME :        template.c             
+* FILENAME :        v3.c             
 *
 * DESCRIPTION :
-*       File to support ...
+*       Main module
 *
 * PUBLIC FUNCTIONS :
 *
@@ -55,7 +55,7 @@
 #include "DeviceFactory.h"
 #include "MqttDevice.h"
 
-#include "prjsettings.h"
+#include "version.h"
 
 /*****************************************************************************************
  * Local constant defines
@@ -98,8 +98,6 @@ static WiFiManagerParameter  wifiManagerParamMqttServerLogin_sts("login", "mqtt 
 static WiFiManagerParameter  wifiManagerParamMqttServerPw_sts("pw", "mqtt pw", "", 15);
 
 static uint32_t             timerRepubAvoid_u32st = 0;
-static uint32_t             timerButtonDown_u32st  = 0;
-static uint8_t              counterButton_u8st = 0;
 static uint32_t             timerLastPub_u32st = 0;
 static boolean              publishInfo_bolst = false;
 static boolean              startWifiConfig_bolst = false;
@@ -139,7 +137,6 @@ boolean processPublishRequests(void)
   }
   else
   {
-    //ret_bol = basicSwitch_ProcessPublishRequests();
     device_pst->ProcessPublishRequests(&client_sts);
   }
  
@@ -198,58 +195,6 @@ void callback(char* p_topic, byte* p_payload, unsigned int p_length)
 }
 
 /**---------------------------------------------------------------------------------------
- * @brief     This initializes the used input and output pins
- * @author    winkste
- * @date      20 Okt. 2017
- * @return    void
-*//*-----------------------------------------------------------------------------------*/
-void InitializePins(void)
-{
-  // attache interrupt code for button
-  pinMode(BUTTON_INPUT_PIN, INPUT);
-  digitalWrite(BUTTON_INPUT_PIN, HIGH); // pull up to avoid interrupts without sensor
-  attachInterrupt(digitalPinToInterrupt(BUTTON_INPUT_PIN), updateBUTTONstate, CHANGE);
-  //basicSwitch_InitializePins();
-  device_pst->Initialize();
-}
-
-/**---------------------------------------------------------------------------------------
- * @brief     This function handles the external button input and updates the value
- *              of the simpleLightState_bolst variable. If the value changed the corresponding
- *              set function is called. Debouncing is also handled by this function
- * @author    winkste
- * @date      20 Okt. 2017
- * @return    n/a
-*//*-----------------------------------------------------------------------------------*/
-void updateBUTTONstate() 
-{
-  // toggle, write to pin, publish to server
-  if(digitalRead(BUTTON_INPUT_PIN)==LOW)
-  {
-    if(millis() - timerButtonDown_u32st > BUTTON_DEBOUNCE)
-    { // avoid bouncing
-      // button down
-      // toggle status of both lights
-      ////////TODO/////////////////////////////////////////////////////////////////basicSwitch_ToggleSimpleLight();
-
-      if(millis() - timerButtonDown_u32st < BUTTON_TIMEOUT)
-      {
-        counterButton_u8st++;
-      } 
-      else 
-      {    
-        counterButton_u8st = 1;
-      }
-      trace_st.print(trace_INFO_MSG, "[BUTTON] push nr ");
-      trace_st.println(trace_PURE_MSG, counterButton_u8st);
-
-    };
-    //Serial.print(".");
-    timerButtonDown_u32st = millis();
-  }
-}
-
-/**---------------------------------------------------------------------------------------
  * @brief     This function handles the connection to the MQTT broker. If connection can't
  *              be established after several attempts the WifiManager is called. If 
  *              connection is successfull, all needed subscriptions are done.
@@ -275,8 +220,7 @@ void reconnect()
       trace_st.println(trace_INFO_MSG, MQTT_SUB_COMMAND);
       client_sts.subscribe(build_topic(MQTT_SUB_COMMAND));  // request general command with payload
       client_sts.loop();
-      // ... and resubscribe
-      //basicSwitch_Reconnect();
+
       device_pst->Reconnect(&client_sts, mqttData_sts.dev_short);
       
       trace_st.println(trace_INFO_MSG, "<<mqtt>> subscribing finished");
@@ -322,7 +266,9 @@ void configModeCallback(WiFiManager *myWiFiManager)
   wifiManager_sts.addParameter(&wifiManagerParamMqttServerLogin_sts);
   wifiManager_sts.addParameter(&wifiManagerParamMqttServerPw_sts);
   // prepare wifimanager variables
-  wifiManager_sts.setAPStaticIPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,255), IPAddress(255,255,255,0));
+  wifiManager_sts.setAPStaticIPConfig(IPAddress(192,168,4,1), 
+                                        IPAddress(192,168,4,255), 
+                                        IPAddress(255,255,255,0));
   trace_st.println(trace_INFO_MSG, "entered config mode");
 }
 
@@ -458,10 +404,11 @@ void setupCallback()
     ESP.reset(); // reset loop if not only or configured after 5min .. 
   }
 
-  // load all paramters!
+  // load parameters from eeprom
   loadConfig();
 
-  InitializePins();
+  // initialize devices
+  device_pst->Initialize();
   
   trace_st.println(trace_INFO_MSG, "<<wifi>> connected");
   trace_st.print(trace_INFO_MSG, "<<wifi>>  IP address: "); 
@@ -496,17 +443,14 @@ void loopCallback()
   }
   //// publish requests ////
 
-	/// see if we hold down the button for more then 6sec /// 
-	if((counterButton_u8st >= 10 && millis() - timerButtonDown_u32st > BUTTON_TIMEOUT) || (true == startWifiConfig_bolst))
+	if(true == startWifiConfig_bolst)
 	{
     startWifiConfig_bolst = false;
-		trace_st.println(trace_INFO_MSG, "<<SYS>> Rebooting to setup mode");
+		trace_st.println(trace_INFO_MSG, "<<sys>> Rebooting to setup mode");
 		delay(200);
 		wifiManager_sts.startConfigPortal(CONFIG_SSID); // needs to be tested!
 		//ESP.reset(); // reboot and switch to setup mode right after that
 	}
-	/// see if we hold down the button for more then 6sec /// 
-
 }
 
 /**---------------------------------------------------------------------------------------

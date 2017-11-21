@@ -1,8 +1,8 @@
 /*****************************************************************************************
-* FILENAME :        SonoffSwitch.h
+* FILENAME :        SingleRelay.h
 *
 * DESCRIPTION :
-*       Class header for SonoffSwitch
+*       Class header for Single Relay
 *
 * PUBLIC FUNCTIONS :
 *       N/A
@@ -29,8 +29,8 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
 *****************************************************************************************/
-#ifndef SONOFFSWITCH_H_
-#define SONOFFSWITCH_H_
+#ifndef SINGLERELAY_H_
+#define SINGLERELAY_H_
 
 /****************************************************************************************/
 /* Imported header files: */
@@ -41,8 +41,6 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 
 #include <ESP8266WiFi.h>         
 #include <PubSubClient.h>
-
-#include "prjsettings.h"
 
 /****************************************************************************************/
 /* Global constant defines: */
@@ -55,7 +53,7 @@ vAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 
 /****************************************************************************************/
 /* Class definition: */
-class SonoffSwitch : public MqttDevice
+class SingleRelay : public MqttDevice
 {
     public:
         /********************************************************************************/
@@ -63,29 +61,28 @@ class SonoffSwitch : public MqttDevice
 
         /********************************************************************************/
         /* Public function definitions: */
-        SonoffSwitch(Trace *p_trace, uint8_t simpleLightPin_u8, uint8_t ledPin_u8);
+        SingleRelay(Trace *p_trace);
         // virtual functions, implementation in derived classes
         bool ProcessPublishRequests(PubSubClient *client);
         void CallbackMqtt(PubSubClient *client, char* p_topic, String p_payload);
         void Initialize();
         void Reconnect(PubSubClient *client_p, const char *dev_p);
-        void ToggleSimpleLight(void);
+        void ToggleRelay(void);
         char* build_topic(const char *topic) ;
         virtual
-        ~SonoffSwitch();
+        ~SingleRelay();
     private:
         /********************************************************************************/
         /* Private data definitions */ 
-        boolean simpleLightState_bol  = false;
+        boolean relayState_bol        = false;
         boolean publishState_bol      = true;
         char buffer_ca[100];
-        uint8_t simpleLightPin_u8     = 0;
-        uint8_t ledPin_u8             = 0;
+        
         /********************************************************************************/
         /* Private function definitions: */
-        void TurnRelaisOff(void);
-        void TurnRelaisOn(void);
-        void setSimpleLight(void);
+        void TurnRelayOff(void);
+        void TurnRelayOn(void);
+        void setRelay(void);
     protected:
         /********************************************************************************/
         /* Protected data definitions */
@@ -95,4 +92,4 @@ class SonoffSwitch : public MqttDevice
 
 };
 
-#endif /* SONOFFSWITCH_H_ */
+#endif /* SINGLERELAY_H_ */
